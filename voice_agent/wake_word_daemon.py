@@ -12,7 +12,7 @@ import sounddevice as sd
 MODEL_PATH = os.path.expanduser("~/.config/omarchy/voice_agent/model")
 
 
-def say_esta_bien():
+def say_esta_bien(comando=""):
     import subprocess
     import os
     piper_cmd = [
@@ -25,17 +25,16 @@ def say_esta_bien():
     try:
         with open('/tmp/sara_speaking.lock', 'w') as f:
             f.write('1')
+            
+        # Llamar al subsistema neuronal independiente
+        gen_script = os.path.expanduser('~/ProyectosPython/generador_respuestas_sara.py')
+        python_exe = os.path.expanduser('~/ProyectosPython/entorno_voz/bin/python')
+        result = subprocess.run([python_exe, gen_script, comando], capture_output=True, text=True)
+        frase = result.stdout.strip() if result.stdout.strip() else "Aquí estoy."
+        
         p_piper = subprocess.Popen(piper_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         p_aplay = subprocess.Popen(aplay_cmd, stdin=p_piper.stdout)
-        import random
-        frases_despertar = [
-            "Aquí estoy.",
-            "Dime.",
-            "Te escucho.",
-            "A tus órdenes.",
-            "Lista."
-        ]
-        frase = random.choice(frases_despertar)
+        
         p_piper.stdin.write(frase.encode('utf-8'))
         
         p_piper.stdin.close()
@@ -168,7 +167,7 @@ def start_listening():
                                 final_command = " ".join(command_chunks).strip()
                                 if final_command:
                                     subprocess.run(['notify-send', 'Sara', 'Procesando tu solicitud...'])
-                                    say_esta_bien()
+                                    say_esta_bien(final_command)
                                     type_text(final_command)
                                 
                                 state = "WAITING_FOR_WAKEWORD"
@@ -183,7 +182,7 @@ def start_listening():
                                 final_command = " ".join(command_chunks).strip()
                                 if final_command:
                                     subprocess.run(['notify-send', 'Sara', 'Procesando tu solicitud...'])
-                                    say_esta_bien()
+                                    say_esta_bien(final_command)
                                     type_text(final_command)
                                 state = "WAITING_FOR_WAKEWORD"
                                 command_chunks = []
