@@ -1,0 +1,28 @@
+#!/bin/bash
+echo "🚀 Iniciando actualización completa del sistema..."
+
+# Refrescar los permisos de sudo usando la contraseña almacenada para que yay/omarchy no pregunte
+if [ -f "$HOME/.sudo_pass" ]; then
+    cat "$HOME/.sudo_pass" | sudo -S -v
+    # Ejecutar en segundo plano un refresco de sudo mientras dura el script por si acaso
+    while true; do cat "$HOME/.sudo_pass" | sudo -S -v; sleep 60; kill -0 $$ || exit; done 2>/dev/null &
+else
+    echo "⚠️ Archivo ~/.sudo_pass no encontrado, es posible que se te pida tu contraseña."
+fi
+
+echo -e "\n📦 Actualizando el sistema base con Omarchy (Seguro)..."
+# Dejamos que Omarchy maneje su propia actualización, snapshots y seguridad
+omarchy update
+
+echo -e "\n📦 Actualizando paquetes de la comunidad (AUR) con yay..."
+# yay -Sua solo actualiza los paquetes de AUR (los que omarchy update no toca)
+yay -Sua --noconfirm
+
+echo -e "\n🧹 Eliminando dependencias que ya no se necesitan..."
+yay -Yc --noconfirm
+# pacman backup if yay -Yc doesn't clean everything
+if pacman -Qtdq &> /dev/null; then
+    cat "$HOME/.sudo_pass" | sudo -S pacman -Rns $(pacman -Qtdq) --noconfirm
+fi
+
+echo -e "\n✅ ¡Actualización y limpieza completadas con éxito!"
