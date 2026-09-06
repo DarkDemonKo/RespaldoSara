@@ -71,7 +71,11 @@ def tail_files():
                                                 os.path.expanduser('~/.config/omarchy/voice_agent/piper/piper/piper'),
                                                 '-m',
                                                 os.path.expanduser('~/.config/omarchy/voice_agent/piper/daniela/model.onnx'),
-                                                '--output_raw'
+                                                '--output_raw',
+                                                '--length_scale', '0.9',
+                                                '--sentence_silence', '0.15',
+                                                '--noise_scale', '0.75',
+                                                '--noise_w', '0.9'
                                             ]
                                             aplay_cmd = ['aplay', '-r', '22050', '-f', 'S16_LE', '-t', 'raw', '-']
                                             

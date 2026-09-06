@@ -69,37 +69,29 @@ def type_text(text):
         except Exception:
             pass
 
-        # Invocamos la ventana con tmux instanciando Antigravity
-        tmux_cmd = f"tmux new-session -s {TMUX_SESSION} 'agy --dangerously-skip-permissions'"
-        subprocess.Popen(['foot', '-a', 'org.omarchy.agent', 'sh', '-c', tmux_cmd], env=env)
+        # Iniciamos tmux directamente en modo detached para que corra 100% en segundo plano
+        subprocess.Popen(['tmux', 'new-session', '-d', '-s', TMUX_SESSION, 'agy --dangerously-skip-permissions'], env=env)
         
-        # FIX BUG 1: Polling activo para evitar la condición de carrera por "Cold Start"
+        # Polling activo para esperar a que agy inicie en segundo plano
         ready = False
         start_time = time.time()
-        while time.time() - start_time < 5.0:  # Hasta 5 segundos de espera máxima
-            # 1. Comprobar que tmux ya registró la sesión (proceso e IPC listos)
+        while time.time() - start_time < 5.0:
             tmux_ready = subprocess.run(
                 ['tmux', 'has-session', '-t', TMUX_SESSION], 
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             ).returncode == 0
             
             if tmux_ready:
-                # 2. Comprobar que hyprland mapeó la ventana de la terminal (foot)
                 try:
-                    clients_out = subprocess.check_output(['hyprctl', 'clients', '-j'])
-                    clients = json.loads(clients_out)
-                    if any(c.get('class') == 'org.omarchy.agent' for c in clients):
-                        # 3. Comprobar que agy está completamente inicializado leyendo el TTY
-                        capture = subprocess.check_output(['tmux', 'capture-pane', '-p', '-t', TMUX_SESSION], stderr=subprocess.DEVNULL).decode()
-                        if 'for shortcuts' in capture or '>' in capture:
-                            ready = True
-                            break
+                    capture = subprocess.check_output(['tmux', 'capture-pane', '-p', '-t', TMUX_SESSION], stderr=subprocess.DEVNULL).decode()
+                    if 'for shortcuts' in capture or '>' in capture:
+                        ready = True
+                        break
                 except Exception:
                     pass
             time.sleep(0.1)
         
         if not ready:
-            # Fallback en caso de que el gestor tarde más o haya fallado el polling
             time.sleep(1.0)
 
     # Inyección headless: Enviamos el texto etiquetado directamente al pseudo-terminal (PTY)

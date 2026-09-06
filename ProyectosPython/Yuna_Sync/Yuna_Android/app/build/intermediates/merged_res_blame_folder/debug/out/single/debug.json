@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.darkdemon.yuna.app-merged_res-28:/layout_activity_main.xml.flat",
+        "source": "com.darkdemon.yuna.app-main-30:/layout/activity_main.xml"
+    },
+    {
+        "merged": "/home/darkdemon/.gradle/daemon/8.5/com.darkdemon.yuna.app-merged_res-28:/layout_activity_main.xml.flat",
+        "source": "/home/darkdemon/.gradle/daemon/8.5/com.darkdemon.yuna.app-main-30:/layout/activity_main.xml"
+    }
+]
